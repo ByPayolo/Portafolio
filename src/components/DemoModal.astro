@@ -1,0 +1,336 @@
+---
+// src/components/DemoModal.astro
+// Modal de preview interactivo — Portfolio Paolo Mata — Clair Obscur Art Direction
+// Singleton: se renderiza una sola vez en el layout/página y se controla via JS.
+---
+
+<!-- Modal overlay — hidden by default -->
+<div
+  id="demo-modal"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Demo preview"
+  class="fixed inset-0 z-50 flex items-center justify-center p-4
+         opacity-0 pointer-events-none
+         transition-opacity duration-300 ease-in-out"
+  style="background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(8px);"
+>
+  <!-- Click-outside-to-close trap -->
+  <div id="demo-modal-backdrop" class="absolute inset-0" aria-hidden="true">
+  </div>
+
+  <!-- Modal panel — adapts dynamically: Rockola (Desktop amplio), EasyWay (Desktop) o Mobile -->
+  <div
+    id="demo-modal-panel"
+    class="relative z-10 flex flex-col w-full max-w-[420px] h-[720px]
+           rounded-[2.5rem] shadow-2xl overflow-hidden
+           scale-95 transition-all duration-300 ease-in-out"
+    style="background-color: #0f172a; border: 1px solid rgba(255,255,255,0.12); box-shadow: 0 25px 80px rgba(0,0,0,0.5);"
+  >
+    <!-- Header bar principal -->
+    <div
+      id="demo-modal-header"
+      class="flex items-center justify-between px-4 py-2.5 flex-shrink-0"
+      style="background: #0f172a; border-bottom: 1px solid rgba(255,255,255,0.08);"
+    >
+      <!-- Controls / notch container -->
+      <div class="flex items-center min-w-[50px]">
+        <!-- Desktop window dots (visible on desktop) -->
+        <div id="demo-modal-desktop-dots" class="hidden items-center gap-1.5">
+          <div class="w-2.5 h-2.5 rounded-full bg-rose-500/80"></div>
+          <div class="w-2.5 h-2.5 rounded-full bg-amber-500/80"></div>
+          <div class="w-2.5 h-2.5 rounded-full bg-emerald-500/80"></div>
+        </div>
+        <!-- Mobile notch (visible on mobile) -->
+        <div id="demo-modal-notch" class="flex items-center gap-2">
+          <div class="w-2 h-2 rounded-full bg-slate-700"></div>
+          <div class="w-12 h-1.5 rounded-full bg-slate-800"></div>
+        </div>
+      </div>
+
+      <!-- Project title slot -->
+      <span
+        id="demo-modal-title"
+        class="text-xs font-semibold tracking-wider truncate max-w-[180px] sm:max-w-xs md:max-w-md text-center text-slate-200"
+        style="font-family: 'Inter', sans-serif;"
+      >
+        Demo
+      </span>
+
+      <!-- Close button -->
+      <button
+        id="demo-modal-close"
+        aria-label="Close demo modal"
+        class="w-7 h-7 flex items-center justify-center rounded-full
+               text-slate-400 hover:text-white hover:bg-slate-800
+               transition-colors duration-150 flex-shrink-0 cursor-pointer"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="w-4 h-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2.5"
+          aria-hidden="true"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Header Sandbox Bar (Exclusivo para Rockola Team) -->
+    <div
+      id="rockola-sandbox-bar"
+      class="hidden items-center justify-between px-4 py-2 text-xs gap-3 flex-wrap flex-shrink-0 bg-slate-800/80 border-b border-slate-700/60"
+    >
+      <div class="flex items-center gap-2">
+        <span
+          class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md font-semibold text-[11px] select-none bg-blue-500/15 text-blue-400 border border-blue-500/30"
+        >
+          <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></span>
+          Host View
+        </span>
+        <span class="text-xs hidden sm:inline text-slate-400">
+          Real-time queue and player
+        </span>
+      </div>
+
+      <!-- Botón Probar Reactividad -->
+      <button
+        id="rockola-btn-reactivity"
+        type="button"
+        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-semibold text-xs text-white bg-[#3B82F6] hover:bg-blue-600 active:scale-95 cursor-pointer transition-all duration-150 shadow-xs"
+        title="Open Guest view in a new tab to vote and see live synchronization in this modal"
+      >
+        <span>⚡</span>
+        <span>Test Reactivity (2 Windows)</span>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="w-3.5 h-3.5 opacity-80"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+          ></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Container for iframe and loader without extra borders -->
+    <div class="relative flex-1 w-full h-full overflow-hidden bg-slate-950">
+      <!-- Loading skeleton shown while iframe loads -->
+      <div
+        id="demo-modal-loader"
+        class="absolute inset-0 flex flex-col items-center justify-center gap-3 z-10 transition-opacity duration-300 bg-slate-900"
+      >
+        <div
+          class="w-10 h-10 rounded-full border-2 animate-spin border-blue-500/20 border-t-blue-500"
+        >
+        </div>
+        <p class="text-xs font-medium text-slate-400 tracking-wider uppercase" style="font-family: 'Inter', sans-serif;">Loading demo…</p>
+      </div>
+
+      <!-- iframe — fills the entire frame -->
+      <iframe
+        id="demo-modal-iframe"
+        src=""
+        title="Interactive project demo"
+        class="w-full h-full border-0 block m-0 p-0 bg-slate-950"
+        allow="geolocation; microphone; camera; midi; encrypted-media; clipboard-read; clipboard-write; autoplay"
+        allowfullscreen
+        loading="lazy"></iframe>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── DemoModal controller ──────────────────────────────────────────────────
+  const modal = document.getElementById("demo-modal")!;
+  const panel = document.getElementById("demo-modal-panel")!;
+  const backdrop = document.getElementById("demo-modal-backdrop")!;
+  const closeBtn = document.getElementById("demo-modal-close")!;
+  const iframe = document.getElementById(
+    "demo-modal-iframe",
+  ) as HTMLIFrameElement;
+  const loader = document.getElementById("demo-modal-loader")!;
+  const titleEl = document.getElementById("demo-modal-title")!;
+  const notchEl = document.getElementById("demo-modal-notch");
+  const dotsEl = document.getElementById("demo-modal-desktop-dots");
+
+  // Elementos del Sandbox de Rockola
+  const rockolaBar = document.getElementById("rockola-sandbox-bar");
+  const btnReactivity = document.getElementById("rockola-btn-reactivity");
+
+  // Variantes de tamaño según tipo de proyecto
+  const ROCKOLA_CLASSES = ["max-w-6xl", "w-11/12", "h-[85vh]", "rounded-2xl"];
+  const DESKTOP_CLASSES = ["max-w-5xl", "w-11/12", "h-[80vh]", "rounded-2xl"];
+  const MOBILE_CLASSES = [
+    "max-w-[420px]",
+    "w-full",
+    "h-[720px]",
+    "rounded-[2.5rem]",
+  ];
+  const ALL_SIZE_CLASSES = [
+    ...ROCKOLA_CLASSES,
+    ...DESKTOP_CLASSES,
+    ...MOBILE_CLASSES,
+  ];
+
+  // Estado de URLs para Rockola
+  let currentRockolaHostUrl = "https://rockola-web.onrender.com/host/DEMO";
+  let currentRockolaGuestUrl = "https://rockola-web.onrender.com/guest/DEMO";
+
+  function updateRockolaUrls(url: string) {
+    let baseUrl = "https://rockola-web.onrender.com";
+    if (url && (url.startsWith("http://") || url.startsWith("https://"))) {
+      try {
+        const parsed = new URL(url);
+        baseUrl = parsed.origin;
+      } catch {
+        baseUrl = url.replace(/\/+$/, "");
+      }
+    }
+    currentRockolaHostUrl = `${baseUrl}/host/DEMO`;
+    currentRockolaGuestUrl = `${baseUrl}/guest/DEMO`;
+  }
+
+  function openModal(url: string, title: string) {
+    const isRockola =
+      url.toLowerCase().includes("rockola") ||
+      title.toLowerCase().includes("rockola");
+    const isEasyway =
+      url.toLowerCase().includes("/easyway/") ||
+      url.toLowerCase().includes("easyway");
+    const isDesktop =
+      isRockola || isEasyway || url.toLowerCase().includes("desktop");
+
+    // Limpiar clases previas de tamaño
+    panel.classList.remove(...ALL_SIZE_CLASSES);
+
+    if (isRockola) {
+      // 1. Formato Desktop amplio para Rockola
+      panel.classList.add(...ROCKOLA_CLASSES);
+      notchEl?.classList.add("hidden");
+      notchEl?.classList.remove("flex");
+      dotsEl?.classList.remove("hidden");
+      dotsEl?.classList.add("flex");
+
+      // Mostrar Header Sandbox
+      rockolaBar?.classList.remove("hidden");
+      rockolaBar?.classList.add("flex");
+
+      // Actualizar URLs de Host / Guest
+      updateRockolaUrls(url);
+
+      // Cargar por defecto la vista de Anfitrión (Host)
+      iframe.src = currentRockolaHostUrl;
+    } else if (isDesktop) {
+      // Formato Desktop estándar para EasyWay / LMS
+      panel.classList.add(...DESKTOP_CLASSES);
+      notchEl?.classList.add("hidden");
+      notchEl?.classList.remove("flex");
+      dotsEl?.classList.remove("hidden");
+      dotsEl?.classList.add("flex");
+
+      rockolaBar?.classList.add("hidden");
+      rockolaBar?.classList.remove("flex");
+
+      iframe.src = url;
+    } else {
+      // Formato Móvil para Huellitas / Snacks
+      panel.classList.add(...MOBILE_CLASSES);
+      dotsEl?.classList.add("hidden");
+      dotsEl?.classList.remove("flex");
+      notchEl?.classList.remove("hidden");
+      notchEl?.classList.add("flex");
+
+      rockolaBar?.classList.add("hidden");
+      rockolaBar?.classList.remove("flex");
+
+      if (url.startsWith("/demos/")) {
+        iframe.src = url;
+      } else {
+        const snackId = url || "@daniellemarsh/huellitas-seguras-demo";
+        iframe.src = `https://snack.expo.dev/embedded/${snackId}?preview=true&platform=web&theme=dark&initialPane=result&iframeOption=previewOnly`;
+      }
+    }
+
+    // Set title & show loader
+    titleEl.textContent = title;
+    loader.style.opacity = "1";
+    loader.style.pointerEvents = "auto";
+
+    // Show overlay
+    modal.classList.remove("opacity-0", "pointer-events-none");
+    modal.classList.add("opacity-100");
+    panel.classList.remove("scale-95");
+    panel.classList.add("scale-100");
+
+    // Lock body scroll
+    document.body.style.overflow = "hidden";
+    closeBtn.focus();
+  }
+
+  function closeModal() {
+    modal.classList.remove("opacity-100");
+    modal.classList.add("opacity-0", "pointer-events-none");
+    panel.classList.remove("scale-100");
+    panel.classList.add("scale-95");
+
+    // Restore scroll
+    document.body.style.overflow = "";
+
+    // Ocultar barra de Rockola y limpiar iframe
+    setTimeout(() => {
+      rockolaBar?.classList.add("hidden");
+      rockolaBar?.classList.remove("flex");
+      iframe.src = "";
+    }, 300);
+  }
+
+  // Evento del botón de Reactividad (2 Ventanas)
+  btnReactivity?.addEventListener("click", () => {
+    // Asegurar que el modal esté en vista Anfitrión para ver los votos en tiempo real
+    if (iframe.src !== currentRockolaHostUrl) {
+      loader.style.opacity = "1";
+      loader.style.pointerEvents = "auto";
+      iframe.src = currentRockolaHostUrl;
+    }
+    // Abrir la vista Invitado en una nueva pestaña
+    window.open(currentRockolaGuestUrl, "_blank", "noopener,noreferrer");
+  });
+
+  // Hide loader once iframe finishes loading
+  iframe.addEventListener("load", () => {
+    loader.style.opacity = "0";
+    loader.style.pointerEvents = "none";
+  });
+
+  // Listen for open events dispatched by ProjectCard buttons
+  document.addEventListener("open-demo-modal", (e: Event) => {
+    const { url, title } = (e as CustomEvent<{ url: string; title: string }>)
+      .detail;
+    openModal(url, title);
+  });
+
+  // Close triggers
+  closeBtn.addEventListener("click", closeModal);
+  backdrop.addEventListener("click", closeModal);
+  document.addEventListener("keydown", (e) => {
+    if (
+      e.key === "Escape" &&
+      !modal.classList.contains("pointer-events-none")
+    ) {
+      closeModal();
+    }
+  });
+</script>

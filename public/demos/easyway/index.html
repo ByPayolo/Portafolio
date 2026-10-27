@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>virtualplatform</title>
+    <script type="module" crossorigin src="/demos/easyway/assets/index-nvCiNry_.js"></script>
+    <link rel="stylesheet" crossorigin href="/demos/easyway/assets/index-D4dBxQ8d.css">
+  </head>
+  <body class="">
+    <div id="root"></div>
+
+    <!-- Demo Role Switcher para iframe en vivo (Hash Router) -->
+    <div id="demo-role-switcher-root"></div>
+    <script>
+      (function() {
+        const ROLES = [
+          {
+            role: 'Admin',
+            label: 'Admin',
+            badge: 'Control Total',
+            icon: '🛡️',
+            path: '#/admin',
+            gradient: 'linear-gradient(135deg, #7c3aed, #4f46e5)',
+            user: { id: 1, user_id: 1, userId: 1, name: 'Paolo Mata (Admin)', email: 'admin@easyway.com', role: 'Admin', rol_id: 1 }
+          },
+          {
+            role: 'Teacher',
+            label: 'Teacher',
+            badge: 'Asistencia & Grupos',
+            icon: '👨‍🏫',
+            path: '#/teacher/dashboard',
+            gradient: 'linear-gradient(135deg, #059669, #0d9488)',
+            user: { id: 3, user_id: 3, userId: 3, name: 'Prof. Carlos Mendoza', email: 'teacher@easyway.com', role: 'Teacher', rol_id: 3 }
+          },
+          {
+            role: 'Student',
+            label: 'Student',
+            badge: 'Aula & Materiales',
+            icon: '🎓',
+            path: '#/student/dashboard',
+            gradient: 'linear-gradient(135deg, #2563eb, #0891b2)',
+            user: { id: 2, user_id: 2, userId: 2, name: 'Ana García (Estudiante)', email: 'student@easyway.com', role: 'Student', rol_id: 2 }
+          }
+        ];
+
+        function isVisiblePage() {
+          const hash = window.location.hash || '';
+          return !hash || hash === '#' || hash === '#/' || hash.startsWith('#/login') || hash.startsWith('#/welcome');
+        }
+
+        function setRole(roleObj) {
+          try {
+            localStorage.setItem('token', 'mock-demo-jwt-' + roleObj.role.toLowerCase() + '-' + Date.now());
+            localStorage.setItem('userRole', roleObj.role);
+            localStorage.setItem('userId', String(roleObj.user.id));
+            localStorage.setItem('user', JSON.stringify(roleObj.user));
+            window.dispatchEvent(new Event('storage'));
+
+            // Redirección exclusiva mediante fragmento Hash para la SPA
+            window.location.hash = roleObj.path;
+          } catch(e) {
+            console.error('Error switching role:', e);
+          }
+        }
+
+        function renderSwitcher() {
+          const container = document.getElementById('demo-role-switcher-root');
+          if (!container) return;
+
+          if (!isVisiblePage()) {
+            container.innerHTML = '';
+            return;
+          }
+
+          if (document.getElementById('drs-panel') || document.getElementById('drs-min-btn')) {
+            return;
+          }
+
+          container.innerHTML = `
+            <div style="position: fixed; bottom: 18px; right: 18px; z-index: 99999; font-family: system-ui, -apple-system, sans-serif;">
+              <div id="drs-panel" style="background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(71, 85, 105, 0.6); border-radius: 16px; padding: 14px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.6); width: 280px; backdrop-filter: blur(12px); color: #fff;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid rgba(51, 65, 85, 0.6);">
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <span style="font-size: 14px;">⚡</span>
+                    <span style="font-size: 12px; font-weight: 700; letter-spacing: 0.02em;">Demo Role Switcher</span>
+                  </div>
+                  <button id="drs-toggle" style="background: transparent; border: 0; color: #94a3b8; cursor: pointer; font-size: 12px; padding: 2px;">✕</button>
+                </div>
+                <p style="font-size: 11px; color: #94a3b8; margin: 0 0 10px 0; line-height: 1.3;">Selecciona un rol para acceder sin contraseña:</p>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  ${ROLES.map(r => `
+                    <button data-role="${r.role}" style="display: flex; align-items: center; justify-content: space-between; background: ${r.gradient}; border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 8px 12px; color: #fff; cursor: pointer; text-align: left; transition: transform 0.15s; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);">
+                      <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 16px;">${r.icon}</span>
+                        <div>
+                          <div style="font-size: 12px; font-weight: 700;">${r.label}</div>
+                          <div style="font-size: 10px; opacity: 0.85;">${r.badge}</div>
+                        </div>
+                      </div>
+                      <span style="font-size: 12px; opacity: 0.8;">→</span>
+                    </button>
+                  `).join('')}
+                </div>
+                <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(51, 65, 85, 0.6); display: flex; justify-content: space-between; font-size: 10px; color: #64748b;">
+                  <span>Hash: #/admin · #/teacher · #/student</span>
+                  <button id="drs-reset" style="background: transparent; border: 0; color: #f43f5e; cursor: pointer; text-decoration: underline; font-size: 10px;">Reset</button>
+                </div>
+              </div>
+              <button id="drs-min-btn" style="display: none; align-items: center; gap: 6px; background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(71, 85, 105, 0.8); border-radius: 9999px; padding: 6px 12px; color: #cbd5e1; cursor: pointer; font-size: 11px; font-weight: 600; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5);">
+                <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span>
+                Demo Roles ▲
+              </button>
+            </div>
+          `;
+
+          const panel = document.getElementById('drs-panel');
+          const minBtn = document.getElementById('drs-min-btn');
+          const toggle = document.getElementById('drs-toggle');
+          const resetBtn = document.getElementById('drs-reset');
+
+          toggle?.addEventListener('click', () => {
+            panel.style.display = 'none';
+            minBtn.style.display = 'flex';
+          });
+
+          minBtn?.addEventListener('click', () => {
+            panel.style.display = 'block';
+            minBtn.style.display = 'none';
+          });
+
+          resetBtn?.addEventListener('click', () => {
+            localStorage.removeItem('token');
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('user');
+            localStorage.removeItem('userId');
+            window.location.hash = '#/login';
+            window.location.reload();
+          });
+
+          container.querySelectorAll('[data-role]').forEach(btn => {
+            btn.addEventListener('click', () => {
+              const roleName = btn.getAttribute('data-role');
+              const found = ROLES.find(r => r.role === roleName);
+              if (found) setRole(found);
+            });
+          });
+        }
+
+        window.addEventListener('DOMContentLoaded', renderSwitcher);
+        window.addEventListener('popstate', renderSwitcher);
+        window.addEventListener('hashchange', renderSwitcher);
+        setInterval(() => {
+          if (isVisiblePage() && !document.getElementById('drs-panel') && !document.getElementById('drs-min-btn')) {
+            renderSwitcher();
+          }
+        }, 800);
+      })();
+    </script>
+  </body>
+</html>

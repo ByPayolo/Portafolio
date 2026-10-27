@@ -1,0 +1,135 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Hero from "../components/Hero.astro";
+import ProjectCard from "../components/ProjectCard.astro";
+import DemoModal from "../components/DemoModal.astro";
+import { projects } from "../data/projects";
+
+const tickerText = "FULLSTACK + NESTJS + REACT + MOBILE + WEBSOCKETS + SQL + ";
+---
+
+<Layout>
+  <!-- ── Hero Section ──────────────────────────────────────────────────────── -->
+  <Hero />
+
+  <!-- ── Ticker / Marquesina ───────────────────────────────────────────────── -->
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker-track">
+      {/* Duplicamos el texto para lograr bucle infinito sin corte */}
+      <span>{tickerText}</span>
+      <span>{tickerText}</span>
+      <span>{tickerText}</span>
+      <span>{tickerText}</span>
+      <span>{tickerText}</span>
+      <span>{tickerText}</span>
+      <span>{tickerText}</span>
+      <span>{tickerText}</span>
+    </div>
+  </div>
+
+  <!-- ── Projects Section ─────────────────────────────────────────────────── -->
+  <section id="projects" class="projects-section">
+    <h2 class="section-header">01 — Selected work</h2>
+
+    <div class="projects-grid">
+      {
+        projects.map((project, i) => (
+          <ProjectCard project={project} index={i} />
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- ── About Me Section ──────────────────────────────────────────────────── -->
+  <section id="about-me" class="about-section">
+    <h2 class="section-header">02 — ABOUT ME</h2>
+
+    <div class="about-content">
+      <!-- Editorial paragraph -->
+      <div class="about-text">
+        <p>
+          I'm Paolo Mata, a Software Engineer and Full-Stack Developer. I enjoy
+          transforming complex requirements into decoupled architectures, robust
+          APIs, and fluid, reactive interfaces.
+        </p>
+      </div>
+
+      <!-- Services list -->
+      <ul class="services-list">
+        <li>
+          <span class="service-dot"></span>
+          Backend Development (NestJS / Express)
+        </li>
+        <li>
+          <span class="service-dot"></span>
+          Frontend Development (React / Astro)
+        </li>
+        <li>
+          <span class="service-dot"></span>
+          Mobile Applications (React Native)
+        </li>
+        <li>
+          <span class="service-dot"></span>
+          Automation & Webhooks (n8n)
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ── Contact Section — Full Acid Lime ──────────────────────────────────── -->
+  <section id="contact" class="contact-section">
+    <div class="contact-inner">
+      <p class="contact-header">03 — CONTACT</p>
+      <p class="contact-subtitle">Have an idea or project in mind?</p>
+      <a
+        href="https://www.linkedin.com/in/paolo-mata/"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="contact-cta"
+      >
+        Let's talk ↗
+      </a>
+
+      <!-- Orbit decoration -->
+      <div class="orbit" aria-hidden="true"></div>
+    </div>
+
+    <!-- Footer within the acid section -->
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <span class="footer-copy">© 2026 PAOLO MATA</span>
+        <div class="footer-links">
+          <a
+            href="https://github.com/ByPayolo"
+            target="_blank"
+            rel="noopener noreferrer">GitHub</a
+          >
+          <a
+            href="https://www.linkedin.com/in/paolo-mata/"
+            target="_blank"
+            rel="noopener noreferrer">LinkedIn</a
+          >
+          <a href="#">BACK TO TOP ↑</a>
+        </div>
+      </div>
+    </footer>
+  </section>
+
+  <!-- ── Global Demo Modal — singleton, controlled via CustomEvent ───────── -->
+  <DemoModal />
+</Layout>
+
+<script>
+  // Scroll to top for "BACK TO TOP" link
+  document.addEventListener("click", (e) => {
+    const target = e.target as HTMLElement;
+    if (
+      target.tagName === "A" &&
+      (target.textContent?.includes("BACK TO TOP") ||
+        target.textContent?.includes("VOLVER ARRIBA"))
+    ) {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  });
+</script>
